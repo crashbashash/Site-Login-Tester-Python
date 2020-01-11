@@ -197,7 +197,7 @@ class GoodStuff:
         self.t_driver = None
 
         while True: #Main creator loop
-            if self.accountsCreated % 1 == 0 and self.t_driver != None and self.accountsCreated > 0: ##Every 250 accounts reset the chrome driver
+            if self.accountsCreated % 15 == 0 and self.t_driver != None and self.accountsCreated > 0: ##Every 250 accounts reset the chrome driver
                 self.ChangeStatus('Relaunching chrome driver to attempt to fix lag problems')
                 self.t_driver.quit()
                 self.t_driver = None
@@ -497,7 +497,7 @@ class Program:
                 print("\nPlease input a valid amount of accounts to be created...")
                 input("\nHit ENTER/RETURN to continue...")
                 continue
-            elif int(accounts) > 1000: #Check if user is trying to spam site too much
+            elif int(accounts) > 10: #Check if user is trying to spam site too much
                 self.DisplayDatingTitle()
 
                 print("\nThis software is inteded for demo purposes, you cannot create more than 10 accounts at a time")
