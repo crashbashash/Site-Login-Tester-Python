@@ -15,3 +15,7 @@ SourceCode/build/main/xref-main.html
 SourceCode/dist/main.exe
 SourceCode/main.spec
 SourceCode/dist/Site Login Tester.exe
+SourceCode/dist/Drivers/chromedriver.exe
+SourceCode/dist/Lists/FirstNames.txt
+SourceCode/dist/Lists/LastNames.txt
+SourceCode/dist/Lists/Passwords.txt
