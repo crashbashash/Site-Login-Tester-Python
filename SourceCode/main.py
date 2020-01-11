@@ -105,14 +105,14 @@ class GoodStuff:
         return password.capitalize() #Return the formatted password
 
     #Function to wait for an element to load
-    def WaitForElementToLoad(self, driver: webdriver, by: By, locator: str, timeOut: int = 120) -> bool:
-        #try:
-        WebDriverWait(driver, timeOut).until(EC.presence_of_element_located((by, locator))) #Wait for elem to become visible
-        return driver.find_element(by, locator).is_displayed and driver.find_element(by, locator).is_enabled #Return the status of the elem
-        #except:
-          #  return False #Return false if it errors out
+    def WaitForElementToLoad(self, driver: webdriver, by: By, locator: str, timeOut: int = 60) -> bool:
+        try:
+            WebDriverWait(driver, timeOut).until(EC.presence_of_element_located((by, locator))) #Wait for elem to become visible
+            return driver.find_element(by, locator).is_displayed and driver.find_element(by, locator).is_enabled #Return the status of the elem
+        except:
+            return False #Return false if it errors out
     
-    def ScrollToElem(self, driver: webdriver, by: By, selector: str, timeOut: int = 120) -> bool:
+    def ScrollToElem(self, driver: webdriver, by: By, selector: str, timeOut: int = 60) -> bool:
         
         if self.WaitForElementToLoad(driver, by, selector, timeOut):
             try:
@@ -125,7 +125,7 @@ class GoodStuff:
         return False #Return false if the elem fails to load
 
     #Function used to write text to an element
-    def WriteTextToElem(self, driver: webdriver, by: By, selector: str, text: str, _clear: bool = True, timeOut: int = 120) -> bool:
+    def WriteTextToElem(self, driver: webdriver, by: By, selector: str, text: str, _clear: bool = True, timeOut: int = 60) -> bool:
         if self.WaitForElementToLoad(driver, by, selector, timeOut): #Wait for the elem to load
             try:
                 self.ScrollToElem(driver, by, selector, timeOut) #Scroll to element
@@ -140,7 +140,7 @@ class GoodStuff:
         return False #Return false if the elem hasn't loaded
 
     #Function used to select an option in a drop-down box element
-    def SelectDropDownOption(self, driver: webdriver, by: By, selector: str, option: int = -1, strOption: str = "", timeOut: int = 120) -> bool:
+    def SelectDropDownOption(self, driver: webdriver, by: By, selector: str, option: int = -1, strOption: str = "", timeOut: int = 60) -> bool:
         if self.WaitForElementToLoad(driver, by, selector, timeOut):
             try:
                 elem = Select(driver.find_element(by, selector)) #Get the drop down box elem
@@ -156,7 +156,7 @@ class GoodStuff:
         return False #Return false if anything fails
 
     #Function used to click on an element
-    def ClickElem(self, driver: webdriver, by: By, selector: str, timeOut: int = 120) -> bool:
+    def ClickElem(self, driver: webdriver, by: By, selector: str, timeOut: int = 60) -> bool:
         if self.WaitForElementToLoad(driver, by, selector, timeOut): #Wait for elem to load
             try:
                 self.ScrollToElem(driver, by, selector, timeOut) #Scroll to elem
@@ -197,9 +197,9 @@ class GoodStuff:
         self.t_driver = None
 
         while True: #Main creator loop
-            if self.accountsCreated % 15 == 0 and self.t_driver != None and self.accountsCreated > 0: ##Every 250 accounts reset the chrome driver
+            if self.accountsCreated % 1 == 0 and self.t_driver != None and self.accountsCreated > 0: ##Every 250 accounts reset the chrome driver
                 self.ChangeStatus('Relaunching chrome driver to attempt to fix lag problems')
-                self.t_driver.close()
+                self.t_driver.quit()
                 self.t_driver = None
             
             if self.t_driver == None: #Check if webdriver isn't running
@@ -207,7 +207,7 @@ class GoodStuff:
             
             if self.accountsCreated >= self.maxAccounts: #Exit the bot if the account count hits the max accs
                 self.ChangeStatus("Finished creating the allocated number of accounts...")
-                self.t_driver.close()
+                self.t_driver.quit()
                 self.running = False
                 return
 
@@ -215,21 +215,21 @@ class GoodStuff:
                 resetCount = 0
             
             if resetCount > 6: #If we have relaunched chrome more than 6 times then we will quit out of the bot
-                self.t_driver.close()
+                self.t_driver.quit()
                 self.ChangeStatus('Relaunched chrome too often, thread will be closed...')
                 self.running = False
                 return
             elif resetCounter > 6: ##If we have failed to create an account more than 6 times in a row then relaunch chrome
                 resetCounter = 0
                 resetCount += 1
-                self.t_driver.close()
+                self.t_driver.quit()
                 self.t_driver = None
                 continue
             elif resetCounter > 0: ##If the reset counter is above 0 then we must have failed recently so increment the fail count
                 self.failedAccounts += 1
 
-            gender: int = randint(0, 2) ## 0 = Male; 1 = Female
-            lookingFor: int = randint(0, 2) ## 0 = Male; 1 = Female
+            gender: int = randint(0, 1) ## 0 = Male; 1 = Female
+            lookingFor: int = randint(0, 1) ## 0 = Male; 1 = Female
 
             name: Tuple[str, str] = self.GenName(firstNamesList, lastNamesList) ##Generate and store the accounts name
 
