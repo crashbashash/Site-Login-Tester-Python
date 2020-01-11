@@ -1,6 +1,7 @@
 #!/bin/python3
 
-from os import system, path, _exit
+from sys import exit
+from os import system, path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -12,7 +13,7 @@ from selenium.webdriver.common.action_chains import ActionBuilder, ActionChains
 from typing import List, Dict, Tuple
 from random import randint
 from time import sleep
-from threading import Thread
+from threading import Thread, Event
 
 class GoodStuff:
     running: bool = False
@@ -44,27 +45,17 @@ class GoodStuff:
     def GenName(self, firstNamesList: List[str], lastNamesList: List[str]) -> Tuple[str, str]:
         name: Tuple[str, str] #Instantiate the Tuple used to store the name
 
-        firstName: str = firstNamesList[randint(0, len(firstNamesList)-1)].replace("\n", "") #Generate first name
-        lastName: str = lastNamesList[randint(0, len(lastNamesList)-1)].replace("\n", "") #Generate last name
-
         while True: #Main generation loop
-            done: bool = True #Bool to determine if the bot has created a suitable name
+            firstName: str = firstNamesList[randint(0, len(firstNamesList)-1)].replace("\n", "") #Get a random first name
+            lastName: str = lastNamesList[randint(0, len(lastNamesList)-1)].replace("\n", "")  #Get a random last name
 
-            for letter in firstName: #Loop through characters in the first name
-                if not letter.isalpha: #Check if the current character isn't a letter
-                    done = False #Set the done bool to false
+            if not firstName.isalpha: #Check if the first name is not alphabetical
+                continue
             
-            if done: #Only check the characters in the second name if the first name only has letters
-                for letter in lastName: #Loop through characters in the last name
-                    if not letter.isalpha: #Check if the current character isn't a letter  
-                        done = False #Set the done bool to false
+            if not lastName.isalpha: #Check if the last name is not alphabetical
+                continue
 
-            if not done: #Check if a suitable name hasn't been created
-                ##Generate the last and first names again
-                firstName: str = firstNamesList[randint(0, len(firstNamesList)-1)].replace("\n", "")
-                lastName: str = lastNamesList[randint(0, len(lastNamesList)-1)].replace("\n", "")
-            else:
-                break #Break out of name gen loop when a suitable name has been created
+            break
         
         ##Add both names to the name tuple
         name = ( firstName.capitalize(), lastName.capitalize() )
@@ -180,7 +171,7 @@ class GoodStuff:
         return options
         
     #Function used to create accounts on a fake dating site
-    def DatingSiteCreatorThread(self, headless: bool = True, debug: bool = False):
+    def DatingSiteCreatorThread(self, stop_event: Event, headless: bool = True, debug: bool = False):
         self.running = True
 
         firstNamesList: List[str] = open(self.runLoc+'Lists/FirstNames.txt').readlines() #Get the first name list
@@ -196,7 +187,7 @@ class GoodStuff:
 
         self.t_driver = None
 
-        while True: #Main creator loop
+        while True and not stop_event.is_set(): #Main creator loop
             if self.accountsCreated % 15 == 0 and self.t_driver != None and self.accountsCreated > 0: ##Every 250 accounts reset the chrome driver
                 self.ChangeStatus('Relaunching chrome driver to attempt to fix lag problems')
                 self.t_driver.quit()
@@ -436,11 +427,14 @@ class Program:
     def DatingSiteCreatorThreadSetup(self, threads: int = 2, accounts: int = 1000):
         threadInfo: List[GoodStuff] = []
         threadsList: List[Thread] = []
+        stopEvents: List[Event] = []
         for _ in range(0, threads): #Create the amount of threads desired
             goodStuff: GoodStuff = GoodStuff(accounts/threads)
-            t: Thread = Thread(target=goodStuff.DatingSiteCreatorThread, args=(True, False))
-
+            stop_event: Event = Event()
+            t: Thread = Thread(target=goodStuff.DatingSiteCreatorThread, args=(stop_event, True, False))
+            t.setDaemon(True)
             threadsList.append(t)
+            stopEvents.append(stop_event)
 
             goodStuff.ChangeStatus("Launching thread...")
             t.start()
@@ -449,26 +443,57 @@ class Program:
         
         t_running: int = -1
 
-        while t_running != 0:
-            t_running = 0
+        prevStatus: List[str] = []
 
-            accountsCreated: int = 0
-            failedAccounts: int = 0
-            threadStatus: List[str] = []
+        try: 
+            while t_running != 0: #Waiting for threads to finish creating all the accounts
+                t_running = 0
 
-            for g in threadInfo:
-                if (g.running):
+                accountsCreated: int = 0
+                failedAccounts: int = 0
+                threadStatus: List[str] = []
+
+                i: int = 0
+                for sT in stopEvents:
+                    g = threadInfo[i]
+                    if sT.is_set and g.running:
                         t_running += 1
-                accountsCreated += g.accountsCreated
-                failedAccounts += g.failedAccounts
-                threadStatus.append(g.threadStatus)
+                    i += 1
 
-            self.DisplayThreadInfo(accountsCreated, failedAccounts, botStatus=threadStatus)
+                for g in threadInfo:
+                    accountsCreated += g.accountsCreated
+                    failedAccounts += g.failedAccounts
+                    threadStatus.append(g.threadStatus)
 
-            sleep(1)
+                if threadStatus != prevStatus:
+                    self.DisplayThreadInfo(accountsCreated, failedAccounts, botStatus=threadStatus) #Display bot info to the user
+                
+                prevStatus = threadStatus
+        except KeyboardInterrupt: #Catch CTRL+C
+            system("cls")
+            print("Telling threads to stop")
+            for i, sT in enumerate(stopEvents, start=0):
+                print(f"\nTelling thread {i+1} to stop")
+                sT.set()
+            
+            system("cls")
+            print("Waiting for all threads to close...")
+            
+            for i, t in enumerate(threadsList):
+                print(f"\nWaiting for thread {i+1} to close...")
+                while t.is_alive():
+                    pass
+
+            print("\n\nClosing webdrivers...")
+            for i, g in enumerate(threadInfo, start=0):
+                print(f"\nTelling webdriver {i+1} to quit...")
+                try:
+                    g.t_driver.quit()
+                except:
+                    pass
 
         input('Hit ENTER/RETURN to continue...')
-        _exit()
+        return
     
     #Function to allow the user to setup the dating site creator
     def DatingSiteCreatorSetup(self):
