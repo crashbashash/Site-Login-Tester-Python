@@ -1,3 +1,16 @@
 debug.log
 DatingAccs.txt
 Numbers.txt
+SourceCode/__pycache__/main.cpython-38.pyc
+SourceCode/build/main/Analysis-00.toc
+SourceCode/build/main/base_library.zip
+SourceCode/build/main/EXE-00.toc
+SourceCode/build/main/main.exe.manifest
+SourceCode/build/main/PKG-00.pkg
+SourceCode/build/main/PKG-00.toc
+SourceCode/build/main/PYZ-00.pyz
+SourceCode/build/main/PYZ-00.toc
+SourceCode/build/main/warn-main.txt
+SourceCode/build/main/xref-main.html
+SourceCode/dist/main.exe
+SourceCode/main.spec
