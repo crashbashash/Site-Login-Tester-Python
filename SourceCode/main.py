@@ -46,8 +46,8 @@ class GoodStuff:
         name: Tuple[str, str] #Instantiate the Tuple used to store the name
 
         while True: #Main generation loop
-            firstName: str = firstNamesList[randint(0, len(firstNamesList)-1)].replace("\n", "") #Get a random first name
-            lastName: str = lastNamesList[randint(0, len(lastNamesList)-1)].replace("\n", "")  #Get a random last name
+            firstName: str = firstNamesList[randint(0, len(firstNamesList)-1)].replace("\n", "").replace(" ", "") #Get a random first name
+            lastName: str = lastNamesList[randint(0, len(lastNamesList)-1)].replace("\n", "").replace(" ", "")  #Get a random last name
 
             if not firstName.isalpha: #Check if the first name is not alphabetical
                 continue
@@ -256,13 +256,13 @@ class GoodStuff:
             else: #Set the looking for gender selector to woman
                 selector = "[for='lookingWoman']"
 
-            if not self.ClickElem(self.t_driver, By.CSS_SELECTOR, selector): #Click the looking for gender
+            if not self.ClickElem(self.t_driver, By.CSS_SELECTOR, selector, timeOut=5): #Click the looking for gender
                 resetCounter += 1
                 continue #if it fails restart the loop
             
             sleep(0.500)
 
-            if not self.ClickElem(self.t_driver, By.CSS_SELECTOR, "[class='next-step-btn vb-nextstep-unique-class']"): #Click the next button (literally the only time we can use it)         
+            if not self.ClickElem(self.t_driver, By.CSS_SELECTOR, "[class='next-step-btn vb-nextstep-unique-class']", timeOut=5): #Click the next button (literally the only time we can use it)         
                 resetCounter += 1
                 continue #If it fails restart the loop
 
@@ -272,21 +272,21 @@ class GoodStuff:
                 resetCounter += 1
                 continue #Reset bot if it fails
 
-            if not self.SelectDropDownOption(self.t_driver, By.ID, "month", option=randint(1,12)): #Try to select a random month
+            if not self.SelectDropDownOption(self.t_driver, By.ID, "month", option=randint(1,12), timeOut=5): #Try to select a random month
                 resetCounter += 1
                 continue #Reset bot if it fails
 
-            if not self.SelectDropDownOption(self.t_driver, By.ID, "year", strOption=str(randint(1921,2000))): #Try to select a random year
+            if not self.SelectDropDownOption(self.t_driver, By.ID, "year", strOption=str(randint(1921,2000)),  timeOut=5): #Try to select a random year
                 resetCounter += 1
                 continue #Reset bot if it fails
 
-            if not self.WriteTextToElem(self.t_driver, By.ID, "firstname", f"{firstName} {lastName}"): #Try to write the accounts name
+            if not self.WriteTextToElem(self.t_driver, By.ID, "firstname", f"{firstName} {lastName}",  timeOut=5): #Try to write the accounts name
                 resetCounter += 1
                 continue #Reset bot if it fails
             
             sleep(1) #Wait to ensure the name is written
 
-            if not self.WriteTextToElem(self.t_driver, By.ID, "firstname", Keys.RETURN, _clear=False): #Try to progress to the next page
+            if not self.WriteTextToElem(self.t_driver, By.ID, "firstname", Keys.RETURN, _clear=False,  timeOut=5): #Try to progress to the next page
                 resetCounter += 1
                 continue #Reset bot if it fails
             
@@ -298,25 +298,25 @@ class GoodStuff:
                 resetCounter += 1
                 continue #Reset bot if it fails
 
-            if not self.WriteTextToElem(self.t_driver, By.ID, "email", email): #Try to write the email to the email text field
+            if not self.WriteTextToElem(self.t_driver, By.ID, "email", email, timeOut=5): #Try to write the email to the email text field
                 resetCounter += 1
                 continue #Reset bot if it fails
 
             sleep(0.500) #Wait to ensure it is written correctly
 
-            if not self.WriteTextToElem(self.t_driver, By.ID, "password", password): #Try to write the password to the password text field
+            if not self.WriteTextToElem(self.t_driver, By.ID, "password", password, timeOut=5): #Try to write the password to the password text field
                 resetCounter += 1
                 continue #Reset bot if it fails
 
             sleep(0.500) #Wait to ensure the text is written correctly
 
-            if not self.WriteTextToElem(self.t_driver, By.ID, "password", Keys.RETURN, _clear=False): #Try to progress to the next page
+            if not self.WriteTextToElem(self.t_driver, By.ID, "password", Keys.RETURN, _clear=False, timeOut=5): #Try to progress to the next page
                 resetCounter += 1
                 continue #Reset bot if it fails
 
             self.ChangeStatus("Waiting for success...")
 
-            if self.WaitForElementToLoad(self.t_driver, By.CSS_SELECTOR, "[class='content welcome']"):
+            if self.WaitForElementToLoad(self.t_driver, By.CSS_SELECTOR, "[class='content welcome']", timeOut=45):
                 self.accountsCreated += 1 #Increment the accounts created by 1
 
                 self.ChangeStatus("Finished creating account! Signing out of the account now...")
@@ -350,8 +350,8 @@ class GoodStuff:
                     reset: bool = False
 
                     while True:
-                        if not self.ClickElem(self.t_driver, By.CLASS_NAME, "prof_photo"): #Wait for the profile button to appear
-                            if not self.ClickElem(self.t_driver, By.CLASS_NAME, "popup_close", timeOut=30): #Try to close the annoying popup
+                        if not self.ClickElem(self.t_driver, By.CLASS_NAME, "prof_photo", timeOut=10): #Wait for the profile button to appear
+                            if not self.ClickElem(self.t_driver, By.CLASS_NAME, "popup_close", timeOut=15): #Try to close the annoying popup
                                 if attempts == 2:
                                     reset = True
                                     break
@@ -431,7 +431,7 @@ class Program:
         for _ in range(0, threads): #Create the amount of threads desired
             goodStuff: GoodStuff = GoodStuff(accounts/threads)
             stop_event: Event = Event()
-            t: Thread = Thread(target=goodStuff.DatingSiteCreatorThread, args=(stop_event, True, False))
+            t: Thread = Thread(target=goodStuff.DatingSiteCreatorThread, args=(stop_event, False, False))
             t.setDaemon(True)
             threadsList.append(t)
             stopEvents.append(stop_event)
@@ -522,7 +522,7 @@ class Program:
                 print("\nPlease input a valid amount of accounts to be created...")
                 input("\nHit ENTER/RETURN to continue...")
                 continue
-            elif int(accounts) > 10: #Check if user is trying to spam site too much
+            elif int(accounts) > 100000: #Check if user is trying to spam site too much
                 self.DisplayDatingTitle()
 
                 print("\nThis software is inteded for demo purposes, you cannot create more than 10 accounts at a time")
