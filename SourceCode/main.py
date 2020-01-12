@@ -431,7 +431,7 @@ class Program:
         for _ in range(0, threads): #Create the amount of threads desired
             goodStuff: GoodStuff = GoodStuff(accounts/threads)
             stop_event: Event = Event()
-            t: Thread = Thread(target=goodStuff.DatingSiteCreatorThread, args=(stop_event, False, False))
+            t: Thread = Thread(target=goodStuff.DatingSiteCreatorThread, args=(stop_event,  True, False))
             t.setDaemon(True)
             threadsList.append(t)
             stopEvents.append(stop_event)
